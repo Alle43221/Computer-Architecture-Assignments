@@ -1,0 +1,75 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit, printf, scanf  
+     8                                  import exit msvcrt.dll   
+     9                                  import printf msvcrt.dll     
+    10                                  import scanf msvcrt.dll     
+    11                                  
+    12                                  ; our data is declared here (the variables needed by our program)
+    13                                  segment data use32 class=data
+    14                                      ; ...
+    15 00000000 25640A00                    format db "%d", 10, 0
+    16 00000004 256300                      format_citire db "%c", 0
+    17                                      
+    18 00000007 00<rept>                    sir times 100 db 0 
+    19                                  
+    20                                  ; our code starts here
+    21                                  segment code use32 class=code
+    22                                      start:
+    23 00000000 BF[07000000]                    mov edi, sir
+    24 00000005 BE[07000000]                    mov esi, sir
+    25                                          bucla: 
+    26 0000000A 56                                  push esi
+    27 0000000B 68[04000000]                        push format_citire
+    28 00000010 FF15[00000000]                      call [scanf]
+    29 00000016 83C408                              add esp, 4*2
+    30                                              
+    31 00000019 803E20                              cmp byte[esi], ' '
+    32 0000001C 7417                                je final_bucla
+    33                                              
+    34 0000001E 803E2C                              cmp byte[esi], ','
+    35 00000021 7412                                je final_bucla
+    36                                              
+    37 00000023 803E2E                              cmp byte[esi], '.'
+    38 00000026 740D                                je final_bucla
+    39                                              
+    40 00000028 803E3B                              cmp byte[esi], ';'
+    41 0000002B 7408                                je final_bucla
+    42                                              
+    43 0000002D 803E0A                              cmp byte[esi], 10
+    44 00000030 741F                                je final
+    45                                              
+    46 00000032 46                                  inc esi
+    47 00000033 EBD5                                jmp bucla
+    48                                              
+    49                                              final_bucla:
+    50                                              
+    51 00000035 89F3                                mov ebx, esi
+    52 00000037 29FB                                sub ebx, edi
+    53 00000039 83FB00                              cmp ebx, 0
+    54 0000003C 74CC                                je bucla
+    55 0000003E 53                                  push ebx
+    56 0000003F 68[00000000]                        push format
+    57 00000044 FF15[00000000]                      call [printf]
+    58 0000004A 83C408                              add esp, 4*2
+    59 0000004D 89F7                                mov edi, esi
+    60                                              
+    61 0000004F EBB9                            jmp bucla
+    62                                          
+    63                                          final:
+    64 00000051 89F3                            mov ebx, esi
+    65 00000053 29FB                            sub ebx, edi
+    66 00000055 53                              push ebx
+    67 00000056 68[00000000]                    push format
+    68 0000005B FF15[00000000]                  call [printf]
+    69 00000061 83C408                          add esp, 4*2
+    70 00000064 89F7                            mov edi, esi
+    71                                          
+    72                                          
+    73 00000066 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    74 00000068 FF15[00000000]                  call    [exit]       ; call exit to terminate the program
+    75                                          

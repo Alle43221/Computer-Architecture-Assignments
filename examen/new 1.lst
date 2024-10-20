@@ -1,0 +1,160 @@
+     1                                  bits 32
+     2                                   
+     3                                  global start
+     4                                  
+     5                                  extern exit, fclose, fopen, fread, scanf, printf            
+     6                                  import exit msvcrt.dll    
+     7                                  import fclose msvcrt.dll
+     8                                  import fopen msvcrt.dll
+     9                                  import fread msvcrt.dll
+    10                                  import printf msvcrt.dll
+    11                                  import scanf msvcrt.dll
+    12                                  
+    13                                  segment data use32 class=data
+    14 00000000 256400                  	format_citire db "%d", 0
+    15 00000003 257300                      format_citire1 db "%s", 0
+    16 00000006 7200                        open_mode db "r", 0
+    17                                      
+    18 00000008 25640A00                    format_afisare db "%d", 10, 0
+    19 0000000C 2D25640A00                  format_afisare1 db "-%d", 10, 0
+    20                                      
+    21 00000011 00000000                    descriptor_fisier dd 0
+    22 00000015 00<rept>                    nume_fisier times 20 db 0
+    23                                      
+    24 00000029 00000000                    intreg dd 0
+    25 0000002D 00000000                    numar dd 0
+    26 00000031 00<rept>                    sir times 10 db 0
+    27                                  	
+    28                                  segment code use32 class=code
+    29                                      start:
+    30 00000000 68[2D000000]                    push numar
+    31 00000005 68[00000000]                    push format_citire  ; citire nr 
+    32 0000000A FF15[00000000]                  call [scanf]
+    33 00000010 83C408                          add esp, 4*2
+    34                                          
+    35 00000013 68[15000000]                    push nume_fisier
+    36 00000018 68[03000000]                    push format_citire1  ; citire nume fisier
+    37 0000001D FF15[00000000]                  call [scanf]
+    38 00000023 83C408                          add esp, 4*2
+    39                                          
+    40 00000026 68[06000000]                    push open_mode
+    41 0000002B 68[15000000]                    push nume_fisier     ; deschidere fisier
+    42 00000030 FF15[00000000]                  call [fopen]
+    43 00000036 83C408                          add esp, 4*2
+    44                                          
+    45 00000039 A3[11000000]                    mov [descriptor_fisier], eax
+    46                                          
+    47 0000003E 83F800                          cmp eax, 0
+    48 00000041 0F84C5000000                    je final
+    49                                          
+    50 00000047 BE[31000000]                    mov esi, sir
+    51                                          bucla:
+    52 0000004C FF35[11000000]                      push dword[descriptor_fisier]
+    53 00000052 6A01                                push 1
+    54 00000054 6A01                                push 1
+    55 00000056 56                                  push esi 
+    56 00000057 FF15[00000000]                      call[fread]
+    57 0000005D 83C410                              add esp, 4*4
+    58                                              
+    59 00000060 83F800                              cmp eax, 0
+    60 00000063 0F84A3000000                        je final
+    61                                              
+    62 00000069 803E20                              cmp byte[esi], ' '
+    63 0000006C 7571                                jne mai_jos
+    64                                              
+    65 0000006E 81FE[31000000]                      cmp esi, sir
+    66 00000074 89F3                                mov ebx, esi
+    67 00000076 BE[31000000]                        mov esi, sir
+    68 0000007B 74CF                                je bucla
+    69                                              
+    70 0000007D 81EB[31000000]                      sub ebx, sir
+    71 00000083 803D[31000000]2D                    cmp byte[sir], '-'
+    72 0000008A 7501                                jne pas_urmator
+    73 0000008C 4B                                  dec ebx
+    74                                              pas_urmator:
+    75 0000008D 3B1D[2D000000]                      cmp ebx, [numar]
+    76 00000093 8B3D[29000000]                      mov edi, [intreg]
+    77 00000099 C705[29000000]0000-                 mov dword[intreg], 0
+    77 000000A1 0000               
+    78 000000A3 75A7                                jne bucla
+    79 000000A5 89FB                                mov ebx, edi
+    80 000000A7 89D8                                mov eax, ebx
+    81 000000A9 83E301                              and ebx, 01
+    82 000000AC 83FB00                              cmp ebx, 0
+    83 000000AF 749B                                je bucla
+    84                                              
+    85 000000B1 803D[31000000]2D                    cmp byte[sir], '-'
+    86 000000B8 7411                                je mai_jos2
+    87 000000BA 50                                  push eax
+    88 000000BB 68[08000000]                        push format_afisare
+    89 000000C0 FF15[00000000]                      call [printf]
+    90 000000C6 83C408                              add esp, 4*2
+    91 000000C9 EB81                                jmp bucla
+    92                                              
+    93                                              mai_jos2:
+    94 000000CB 50                                  push eax
+    95 000000CC 68[0C000000]                        push format_afisare1
+    96 000000D1 FF15[00000000]                      call [printf]
+    97 000000D7 83C408                              add esp, 4*2
+    98 000000DA E96DFFFFFF                          jmp bucla
+    99                                              
+   100                                              mai_jos:
+   101 000000DF 803E2D                              cmp byte[esi], '-'
+   102 000000E2 7422                                je si_mai_jos
+   103                                              
+   104 000000E4 A1[29000000]                        mov eax, [intreg]
+   105 000000E9 BA00000000                          mov edx, 0
+   106 000000EE BB0A000000                          mov ebx, 10
+   107 000000F3 F7E3                                mul ebx
+   108 000000F5 BB00000000                          mov ebx, 0
+   109 000000FA 8A1E                                mov bl, [esi]
+   110 000000FC 83EB30                              sub ebx, '0'
+   111 000000FF 01D8                                add eax, ebx
+   112 00000101 A3[29000000]                        mov [intreg], eax
+   113                                              
+   114                                              si_mai_jos:
+   115 00000106 46                                  inc esi
+   116                                              
+   117 00000107 E940FFFFFF                      jmp bucla
+   118                                          final:
+   119                                          
+   120 0000010C 81FE[31000000]                  cmp esi, sir
+   121 00000112 89F3                            mov ebx, esi
+   122 00000114 BE[31000000]                    mov esi, sir
+   123 00000119 745B                            je inchidere
+   124                                          
+   125 0000011B 81EB[31000000]                  sub ebx, sir
+   126 00000121 803D[31000000]2D                cmp byte[sir], '-'
+   127 00000128 7501                            jne pas_urmator1
+   128 0000012A 4B                              dec ebx
+   129                                          pas_urmator1:
+   130 0000012B 3B1D[2D000000]                  cmp ebx, [numar]
+   131 00000131 7543                            jne inchidere
+   132 00000133 8B1D[29000000]                  mov ebx, [intreg]
+   133 00000139 C705[29000000]0000-             mov dword[intreg], 0
+   133 00000141 0000               
+   134 00000143 89D8                            mov eax, ebx
+   135 00000145 83E301                          and ebx, 01
+   136 00000148 83FB00                          cmp ebx, 0
+   137 0000014B 7429                            je inchidere
+   138                                          
+   139 0000014D 803D[31000000]2D                cmp byte[sir], '-'
+   140 00000154 7411                            je mai_jos3
+   141 00000156 50                              push eax
+   142 00000157 68[08000000]                    push format_afisare
+   143 0000015C FF15[00000000]                  call [printf]
+   144 00000162 83C408                          add esp, 4*2
+   145 00000165 EB0F                            jmp inchidere
+   146                                          mai_jos3:
+   147 00000167 50                              push eax
+   148 00000168 68[0C000000]                    push format_afisare1
+   149 0000016D FF15[00000000]                  call [printf]
+   150 00000173 83C408                          add esp, 4*2
+   151                                          
+   152                                          inchidere:
+   153 00000176 FF35[11000000]              	push dword[descriptor_fisier]    ; inchidere fisier
+   154 0000017C FF15[00000000]                  call [fclose]  
+   155 00000182 83C404                          add esp, 4
+   156                                          
+   157 00000185 6A00                            push    dword 0      
+   158 00000187 FF15[00000000]                  call    [exit]       

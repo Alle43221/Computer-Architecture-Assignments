@@ -1,0 +1,129 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit, fprintf, scanf, fopen, fclose
+     8                                  import exit msvcrt.dll   
+     9                                  import fprintf msvcrt.dll     
+    10                                  import scanf msvcrt.dll 
+    11                                  import fopen msvcrt.dll
+    12                                  import fclose msvcrt.dll    
+    13                                  
+    14                                  ; our data is declared here (the variables needed by our program)
+    15                                  segment data use32 class=data
+    16                                      ; ...
+    17 00000000 256300                      format db "%c", 0
+    18 00000003 256300                      format_citire db "%c", 0
+    19 00000006 737472696E672E7478-         denumire db "string.txt", 0
+    19 0000000F 7400               
+    20 00000011 7700                        mode db "w", 0
+    21 00000013 00000000                    descriptor_fisier dd 0
+    22 00000017 00000000                    cate dd 0
+    23 0000001B 00<rept>                    sir times 100 db 0 
+    24                                  
+    25                                  ; our code starts here
+    26                                  segment code use32 class=code
+    27                                      start:
+    28 00000000 BE[1B000000]                    mov esi, sir
+    29                                          buclita:
+    30 00000005 56                                  push esi
+    31 00000006 68[03000000]                        push format_citire
+    32 0000000B FF15[00000000]                      call [scanf]
+    33 00000011 83C408                              add esp, 4*2
+    34 00000014 46                                  inc esi
+    35 00000015 807EFF0A                            cmp byte[esi-1], 10
+    36 00000019 75EA                            jne buclita
+    37                                  
+    38 0000001B 68[11000000]                    push mode
+    39 00000020 68[06000000]                    push denumire
+    40 00000025 FF15[00000000]                  call [fopen]
+    41 0000002B 83C408                          add esp, 4*2
+    42 0000002E A3[13000000]                    mov [descriptor_fisier], eax
+    43                                          
+    44 00000033 4E                              dec esi
+    45 00000034 4E                              dec esi
+    46 00000035 89F1                            mov ecx, esi
+    47 00000037 81E9[1B000000]                  sub ecx, sir
+    48 0000003D 41                              inc ecx
+    49 0000003E 890D[17000000]                  mov [cate], ecx
+    50                                          bucla:  
+    51 00000044 51                                  push ecx
+    52 00000045 803E20                              cmp byte[esi], ' '
+    53 00000048 7435                                je final_bucla
+    54                                              
+    55 0000004A 803E2C                              cmp byte[esi], ','
+    56 0000004D 7430                                je final_bucla
+    57                                              
+    58 0000004F 803E2E                              cmp byte[esi], '.'
+    59 00000052 742B                                je final_bucla
+    60                                              
+    61 00000054 803E3B                              cmp byte[esi], ';'
+    62 00000057 7426                                je final_bucla
+    63                                              
+    64 00000059 803E41                              cmp byte[esi], 'A'
+    65 0000005C 7221                                jb final_bucla
+    66 0000005E 803E5A                              cmp byte[esi], 'Z'
+    67 00000061 771C                                ja final_bucla
+    68                                              
+    69 00000063 BB00000000                          mov ebx, 0
+    70 00000068 8A1E                                mov bl, [esi]
+    71 0000006A 53                                  push ebx
+    72 0000006B 68[00000000]                        push format
+    73 00000070 FF35[13000000]                      push dword[descriptor_fisier]
+    74 00000076 FF15[00000000]                      call [fprintf]
+    75 0000007C 83C40C                              add esp, 4*3
+    76                                              
+    77                                              final_bucla:
+    78 0000007F 4E                                  dec esi
+    79 00000080 59                                  pop ecx
+    80                                              
+    81 00000081 E2C1                            loop bucla
+    82                                          
+    83 00000083 8B0D[17000000]                  mov ecx, [cate]
+    84 00000089 BE[1B000000]                    mov esi, sir
+    85 0000008E 0335[17000000]                  add esi, [cate]
+    86 00000094 4E                              dec esi
+    87                                          bucla1:  
+    88 00000095 51                                  push ecx
+    89 00000096 803E20                              cmp byte[esi], ' '
+    90 00000099 7435                                je final_bucla1
+    91                                              
+    92 0000009B 803E2C                              cmp byte[esi], ','
+    93 0000009E 7430                                je final_bucla1
+    94                                              
+    95 000000A0 803E2E                              cmp byte[esi], '.'
+    96 000000A3 742B                                je final_bucla1
+    97                                              
+    98 000000A5 803E3B                              cmp byte[esi], ';'
+    99 000000A8 7426                                je final_bucla1
+   100                                              
+   101 000000AA 803E61                              cmp byte[esi], 'a'
+   102 000000AD 7221                                jb final_bucla1
+   103 000000AF 803E7A                              cmp byte[esi], 'z'
+   104 000000B2 771C                                ja final_bucla1
+   105                                              
+   106 000000B4 BB00000000                          mov ebx, 0
+   107 000000B9 8A1E                                mov bl, [esi]
+   108 000000BB 53                                  push ebx
+   109 000000BC 68[00000000]                        push format
+   110 000000C1 FF35[13000000]                      push dword[descriptor_fisier]
+   111 000000C7 FF15[00000000]                      call [fprintf]
+   112 000000CD 83C40C                              add esp, 4*3
+   113                                              
+   114                                              final_bucla1:
+   115 000000D0 4E                                  dec esi
+   116 000000D1 59                                  pop ecx
+   117                                              
+   118 000000D2 E2C1                            loop bucla1
+   119                                          
+   120                                          final:
+   121                                          
+   122 000000D4 FF35[13000000]                  push dword[descriptor_fisier]
+   123 000000DA FF15[00000000]                  call [fclose]
+   124 000000E0 83C404                          add esp, 4
+   125                                          
+   126 000000E3 6A00                            push    dword 0      
+   127 000000E5 FF15[00000000]                  call    [exit]      
+   128                                          
