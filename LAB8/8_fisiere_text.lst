@@ -1,0 +1,89 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit, fopen, fclose, fread, printf              ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll   
+     9                                  import fopen msvcrt.dll    
+    10                                  import fclose msvcrt.dll    
+    11                                  import fread msvcrt.dll    
+    12                                  import printf msvcrt.dll    
+    13                                  
+    14                                  ; our data is declared here (the variables needed by our program)
+    15                                  segment data use32 class=data
+    16 00000000 2563203A20256400            mod_afisare db "%c : %d", 0
+    17 00000008 696E7075742E747874-         nume_fisier db "input.txt", 0
+    17 00000011 00                 
+    18 00000012 7200                        mod_acces db "r", 0
+    19 00000014 00000000                    descriptor_fisier dd 0
+    20 00000018 <res 00000064>              text resb 100
+    21 0000007C 01000000                    dimensiune dd 1
+    22 00000080 64000000                    count dd 100
+    23 00000084 00                          lungime db 0
+    24 00000085 00<rept>                    vector times 26 db 0
+    25 0000009F 00000000                    maxim dd 0
+    26 000000A3 00000000                    element dd 0
+    27                                  
+    28                                  ; our code starts here
+    29                                  segment code use32 class=code
+    30                                      start:
+    31                                          
+    32 00000000 68[12000000]                    push dword mod_acces
+    33 00000005 68[08000000]                    push dword nume_fisier
+    34 0000000A FF15[00000000]                  call [fopen]
+    35 00000010 83C408                          add esp, 4*2
+    36                                          
+    37 00000013 A3[14000000]                    mov [descriptor_fisier], eax
+    38 00000018 BF[85000000]                    mov edi, vector
+    39                                          
+    40 0000001D FF35[14000000]                  push dword [descriptor_fisier]
+    41 00000023 FF35[80000000]                  push dword [count]
+    42 00000029 FF35[7C000000]                  push dword [dimensiune]
+    43 0000002F 68[18000000]                    push dword text
+    44 00000034 FF15[00000000]                  call [fread]
+    45 0000003A 83C410                          add esp, 4*4
+    46                                          
+    47 0000003D BE[18000000]                    mov esi, text
+    48 00000042 89C1                            mov ecx, eax
+    49 00000044 B800000000                      mov eax, 0
+    50 00000049 FC                              cld
+    51 0000004A E32C                            jecxz iesire_bucla
+    52                                          bucla:
+    53 0000004C AC                                  lodsb
+    54 0000004D 3C41                                cmp al, 'A'
+    55 0000004F 7225                                jb final_bucla
+    56 00000051 3C5A                                cmp al, 'Z'
+    57 00000053 7721                                ja final_bucla
+    58                                              
+    59 00000055 2C41                                sub al, 'A'
+    60 00000057 FE0407                              inc byte[edi+eax*1]
+    61                                              
+    62 0000005A 8A1D[9F000000]                      mov bl, [maxim]
+    63 00000060 381C07                              cmp [edi+eax*1], bl
+    64 00000063 7611                                jbe final_bucla
+    65                                              
+    66 00000065 8A1C07                              mov bl, [edi+eax*1]
+    67 00000068 881D[9F000000]                      mov [maxim], bl
+    68                                              
+    69 0000006E 83C041                              add eax, 'A'
+    70 00000071 A3[A3000000]                        mov [element], eax
+    71                                              
+    72                                              final_bucla:
+    73 00000076 E2D4                                loop bucla
+    74                                          iesire_bucla:
+    75                                          
+    76 00000078 FF35[9F000000]                  push dword[maxim]
+    77 0000007E FF35[A3000000]                  push dword[element]
+    78 00000084 68[00000000]                    push mod_afisare
+    79 00000089 FF15[00000000]                  call [printf]
+    80 0000008F 83C40C                          add esp, 4*3
+    81                                  	
+    82 00000092 FF35[14000000]          	push dword[descriptor_fisier]
+    83 00000098 FF15[00000000]                  call [fclose]
+    84 0000009E 83C404                          add esp, 4
+    85                                      
+    86                                          ; exit(0)
+    87 000000A1 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    88 000000A3 FF15[00000000]                  call    [exit]       ; call exit to terminate the program

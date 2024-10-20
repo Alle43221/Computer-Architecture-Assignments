@@ -1,0 +1,75 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit, fopen, fclose, fprintf              ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll   
+     9                                  import fopen msvcrt.dll    
+    10                                  import fclose msvcrt.dll    
+    11                                  import fprintf msvcrt.dll    
+    12                                  
+    13                                  ; our data is declared here (the variables needed by our program)
+    14                                  segment data use32 class=data
+    15 00000000 25780A00                    mod_afisare db "%x", 10, 0
+    16 00000004 6F75747075742E7478-         nume_fisier db "output.txt", 0
+    16 0000000D 7400               
+    17 0000000F 7700                        mod_acces db "w", 0
+    18 00000011 00000000                    descriptor_fisier dd 0
+    19                                      
+    20 00000015 AFBC                        valoare dw 0BCAFh
+    21                                  
+    22                                  ; our code starts here
+    23                                  segment code use32 class=code
+    24                                      start:
+    25                                          
+    26 00000000 68[0F000000]                    push dword mod_acces
+    27 00000005 68[04000000]                    push dword nume_fisier
+    28 0000000A FF15[00000000]                  call [fopen]
+    29 00000010 83C408                          add esp, 4*2
+    30                                          
+    31 00000013 A3[11000000]                    mov [descriptor_fisier], eax
+    32 00000018 BE[15000000]                    mov esi, valoare
+    33 0000001D BA00000000                      mov edx, 0
+    34 00000022 83C601                          add esi, 1
+    35                                          
+    36 00000025 FD                              std
+    37                                          ;cld
+    38 00000026 B902000000                      mov ecx, 2
+    39 0000002B E340                            jecxz sfarsit_bucla
+    40                                          bucla:
+    41 0000002D AC                                  lodsb ; AL=BC / AF
+    42 0000002E 88C3                                mov bl, al
+    43 00000030 C0E804                              shr al, 4
+    44                                              
+    45 00000033 51                                  push ecx
+    46                                              
+    47 00000034 88C2                                mov dl, al
+    48 00000036 52                                  push edx
+    49 00000037 68[00000000]                        push mod_afisare
+    50 0000003C FF35[11000000]                      push dword[descriptor_fisier]
+    51 00000042 FF15[00000000]                      call [fprintf]
+    52 00000048 83C40C                              add esp, 4*3
+    53                                              
+    54 0000004B 88D8                                mov al, bl
+    55 0000004D C0E004                              shl al, 4
+    56 00000050 C0E804                              shr al, 4
+    57 00000053 88C2                                mov dl, al
+    58 00000055 52                                  push edx
+    59 00000056 68[00000000]                        push mod_afisare
+    60 0000005B FF35[11000000]                      push dword[descriptor_fisier]
+    61 00000061 FF15[00000000]                      call [fprintf]
+    62 00000067 83C40C                              add esp, 4*3
+    63 0000006A 59                                  pop ecx
+    64                                              
+    65 0000006B E2C0                                loop bucla
+    66                                          sfarsit_bucla:
+    67                                          
+    68 0000006D FF35[11000000]                  push dword[descriptor_fisier]
+    69 00000073 FF15[00000000]                  call [fclose]
+    70 00000079 83C404                          add esp, 4
+    71                                      
+    72                                          ; exit(0)
+    73 0000007C 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    74 0000007E FF15[00000000]                  call    [exit]       ; call exit to terminate the program

@@ -1,0 +1,98 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit, fopen, fclose, fprintf              ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll   
+     9                                  import fopen msvcrt.dll    
+    10                                  import fclose msvcrt.dll    
+    11                                  import fprintf msvcrt.dll    
+    12                                  
+    13                                  ; our data is declared here (the variables needed by our program)
+    14                                  segment data use32 class=data
+    15 00000000 25780A00                    mod_afisare db "%x", 10, 0
+    16 00000004 6F75747075742E7478-         nume_fisier db "output.txt", 0
+    16 0000000D 7400               
+    17 0000000F 7700                        mod_acces db "w", 0
+    18 00000011 00000000                    descriptor_fisier dd 0
+    19 00000015 00                          high_word db 0
+    20 00000016 00                          low_word db 0
+    21                                      
+    22 00000017 AFBC                        valoare dw 0BCAFh
+    23                                  
+    24                                  ; our code starts here
+    25                                  segment code use32 class=code
+    26                                      start:
+    27                                          
+    28 00000000 68[0F000000]                    push dword mod_acces
+    29 00000005 68[04000000]                    push dword nume_fisier
+    30 0000000A FF15[00000000]                  call [fopen]
+    31 00000010 83C408                          add esp, 4*2
+    32                                          
+    33 00000013 A3[11000000]                    mov [descriptor_fisier], eax
+    34 00000018 BE[17000000]                    mov esi, valoare
+    35 0000001D BA00000000                      mov edx, 0
+    36 00000022 FC                              cld
+    37                                          
+    38 00000023 AC                              lodsb
+    39 00000024 A2[15000000]                    mov [high_word], al
+    40 00000029 AC                              lodsb
+    41 0000002A A2[16000000]                    mov [low_word], al
+    42                                          
+    43 0000002F 8A1D[16000000]                   mov bl, [low_word]
+    44 00000035 C0EB04                           shr bl, 4
+    45                                              
+    46 00000038 51                               push ecx
+    47                                              
+    48 00000039 88DA                             mov dl, bl
+    49 0000003B 52                               push edx
+    50 0000003C 68[00000000]                     push mod_afisare
+    51 00000041 FF35[11000000]                   push dword[descriptor_fisier]
+    52 00000047 FF15[00000000]                   call [fprintf]
+    53 0000004D 83C40C                           add esp, 4*3
+    54                                              
+    55 00000050 8A1D[16000000]                   mov bl, [low_word]
+    56 00000056 C0E304                           shl bl, 4
+    57 00000059 C0EB04                           shr bl, 4
+    58 0000005C 88DA                             mov dl, bl
+    59 0000005E 52                               push edx
+    60 0000005F 68[00000000]                     push mod_afisare
+    61 00000064 FF35[11000000]                   push dword[descriptor_fisier]
+    62 0000006A FF15[00000000]                   call [fprintf]
+    63 00000070 83C40C                           add esp, 4*3
+    64 00000073 59                               pop ecx
+    65                                          
+    66                                        
+    67                                          
+    68 00000074 8A1D[15000000]                   mov bl, [high_word]
+    69 0000007A C0EB04                           shr bl, 4
+    70                                              
+    71 0000007D 51                               push ecx
+    72                                              
+    73 0000007E 88DA                             mov dl, bl
+    74 00000080 52                               push edx
+    75 00000081 68[00000000]                     push mod_afisare
+    76 00000086 FF35[11000000]                   push dword[descriptor_fisier]
+    77 0000008C FF15[00000000]                   call [fprintf]
+    78 00000092 83C40C                           add esp, 4*3
+    79                                              
+    80 00000095 8A1D[15000000]                   mov bl, [high_word]
+    81 0000009B C0E304                           shl bl, 4
+    82 0000009E C0EB04                           shr bl, 4
+    83 000000A1 88DA                             mov dl, bl
+    84 000000A3 52                               push edx
+    85 000000A4 68[00000000]                     push mod_afisare
+    86 000000A9 FF35[11000000]                   push dword[descriptor_fisier]
+    87 000000AF FF15[00000000]                   call [fprintf]
+    88 000000B5 83C40C                           add esp, 4*3
+    89 000000B8 59                               pop ecx
+    90                                           
+    91 000000B9 FF35[11000000]                  push dword[descriptor_fisier]
+    92 000000BF FF15[00000000]                  call [fclose]
+    93 000000C5 83C404                          add esp, 4
+    94                                      
+    95                                          ; exit(0)
+    96 000000C8 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    97 000000CA FF15[00000000]                  call    [exit]       ; call exit to terminate the program

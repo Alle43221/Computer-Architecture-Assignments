@@ -1,0 +1,48 @@
+     1                                  bits 32
+     2                                  ;global _concat
+     3                                  ;extern _sir4
+     4                                  global start
+     5                                  extern exit
+     6                                  import exit msvcrt.dll
+     7                                  segment data public data use32
+     8 00000000 616E6100                    cuv1 db "ana", 0
+     9 00000004 61726500                    cuv2 db "are", 0
+    10 00000008 00<rept>                    rez times 10 db 0
+    11                                  	
+    12                                  segment code public code use32
+    13                                  ;_concat:
+    14                                  start:
+    15                                      ;push ebp
+    16                                      ;mov ebp,esp
+    17                                      
+    18                                      ;mov edi, _sir4
+    19 00000000 BF[08000000]                mov edi, rez
+    20 00000005 BE[00000000]                mov esi, cuv1
+    21                                      ;mov esi, [ebp+8]
+    22 0000000A FC                          cld
+    23                                      repeta:
+    24 0000000B AC                              lodsb
+    25 0000000C 3C00                            cmp al, 0
+    26 0000000E 7403                            je mai_jos
+    27 00000010 AA                              stosb
+    28 00000011 EBF8                            jmp repeta
+    29                                          mai_jos:
+    30                                  	
+    31                                      ;mov esi, [ebp+4]
+    32 00000013 BE[04000000]                mov esi, cuv2
+    33 00000018 FC                          cld
+    34                                      repeta1:
+    35 00000019 AC                              lodsb
+    36 0000001A 3C00                            cmp al, 0
+    37 0000001C 7403                            je mai_jos1
+    38 0000001E AA                              stosb
+    39 0000001F EBF8                            jmp repeta1
+    40                                          mai_jos1:
+    41                                          
+    42                                  	;mov esp, ebp
+    43                                  	;pop ebp
+    44                                        
+    45                                      ;ret
+    46                                      
+    47 00000021 6A00                        push dword 0
+    48 00000023 FF15[00000000]              call[exit]

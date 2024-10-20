@@ -1,0 +1,72 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  global start        
+     4                                  
+     5                                  extern exit               
+     6                                  import exit msvcrt.dll    
+     7                                                           
+     8                                  ; our data is declared here (the variables needed by our program)
+     9                                  segment data use32 class=data
+    10 00000000 785603124D3C2C1A76-         s DD 1203_5678h, 1A2C_3C4Dh, 98FC_DC76h, 1233_5678h
+    10 00000009 DCFC9878563312     
+    11                                      len equ ($-s)/4
+    12 00000010 00<rept>                    d times len db 0
+    13 00000014 0B                          unsprezece db 11
+    14 00000015 64                          o_suta db 100
+    15 00000016 0A                          zece db 10
+    16                                      
+    17                                      ;Se da un sir de dublucuvinte. Sa se obtina sirul format din octetii inferiori ai
+    18                                      ;cuvintelor superioare din elementele sirului de dublucuvinte care sunt palindrom in scrierea in baza 10.
+    19                                  
+    20                                  ; our code starts here
+    21                                  segment code use32 class=code
+    22                                      start:
+    23 00000000 BE[00000000]                    mov esi, s
+    24 00000005 BF[10000000]                    mov edi, d
+    25 0000000A FC                              cld
+    26 0000000B B904000000                      mov ecx, len
+    27                                          repeta:
+    28 00000010 66AD                                lodsw ;cuvantul inferior in AX
+    29 00000012 66AD                                lodsw ;cuvantul superior in AX
+    30                                                    ;in AL avem octetul inferior
+    31                                              
+    32 00000014 B700                                mov bh, 0
+    33 00000016 88C3                                mov bl, al
+    34 00000018 80FB63                              CMP bl, 63h ;>99
+    35 0000001B 7718                                JNBE cazul_3_cifre
+    36 0000001D 80FB09                              CMP bl, 9h  ;>9
+    37 00000020 7702                                JNBE cazul_2_cifre
+    38 00000022 EB2F                                JMP adauga
+    39                                              
+    40                                              cazul_2_cifre:
+    41 00000024 B400                                    mov ah, 0
+    42 00000026 88D8                                    mov al, bl
+    43 00000028 F635[14000000]                          div byte[unsprezece] ;ah:al rest:cat
+    44 0000002E 80FC00                                  cmp ah, 0
+    45 00000031 7420                                    JE adauga
+    46 00000033 EB21                                    JMP final
+    47                                              
+    48                                              cazul_3_cifre:
+    49 00000035 B400                                    mov ah, 0
+    50 00000037 88D8                                    mov al, bl
+    51 00000039 F635[15000000]                          div byte[o_suta] ;ah:al rest:cat
+    52 0000003F 88C2                                    mov dl, al ;nr/100
+    53                                                  
+    54 00000041 B400                                    mov ah, 0
+    55 00000043 88D8                                    mov al, bl
+    56 00000045 F635[16000000]                          div byte[zece] ;ah:al rest:cat
+    57 0000004B 88E6                                    mov dh, ah ;nr/100
+    58                                                  
+    59 0000004D 38D6                                    cmp dh, dl
+    60 0000004F 7402                                    JE adauga
+    61 00000051 EB03                                    JMP final
+    62                                              
+    63                                              adauga:
+    64 00000053 88D8                                    mov al, bl
+    65 00000055 AA                                      STOSB 
+    66                                              final:
+    67                                              
+    68 00000056 E2B8                            loop repeta
+    69                                          
+    70 00000058 6A00                            push dword 0      
+    71 0000005A FF15[00000000]                  call [exit]   
