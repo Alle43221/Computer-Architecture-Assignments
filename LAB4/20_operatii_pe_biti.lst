@@ -1,0 +1,44 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  
+    11                                  ; our data is declared here (the variables needed by our program)
+    12                                  segment data use32 class=data
+    13                                      ; Se dau cuvintele A si B. Se cere dublucuvantul C:
+    14                                      ; x bitii 0-5 ai lui C coincid cu bitii 3-8 ai lui A
+    15                                      ; x bitii 6-8 ai lui C coincid cu bitii 2-4 ai lui B
+    16                                      ; x bitii 9-15 ai lui C reprezinta bitii 6-12 ai lui A
+    17                                      ; bitii 16-31 ai lui C sunt 0
+    18 00000000 7DA3                         a dw 1010001101111101b; 1010 0011 0111 1101
+    19 00000002 DA49                         b dw 0100100111011010b; 0100 1001 1101 1010
+    20 00000004 00000000                     c dd 0
+    21                                  
+    22                                  ; our code starts here
+    23                                  segment code use32 class=code
+    24                                      start:
+    25 00000000 66A1[00000000]                  MOV AX, [a] ; A37D 1010 0011 0111 1101
+    26 00000006 66C1E007                        SHL AX, 7   ;      1011 1110 1000 0000
+    27 0000000A 66C1E80A                        SHR AX, 10  ;      0000 0000 0010 1111
+    28 0000000E 660905[04000000]                OR [c], AX  ;    c=0000 0000 0010 1111
+    29                                          
+    30 00000015 66A1[02000000]                  MOV AX, [b] ;      0100 1001 1101 1010
+    31 0000001B 66C1E802                        SHR AX, 2   ;      0001 0010 0111 0110
+    32 0000001F 66C1E00C                        SHL AX, 12  ;      0110 0000 0000 0000
+    33 00000023 66C1E806                        SHR AX, 6   ;      0000 0001 1000 0000
+    34 00000027 660905[04000000]                OR [c], AX  ;    c=0000 0001 1010 1111
+    35                                          
+    36 0000002E 66A1[00000000]                  MOV AX, [a] ;      1010 0011 0111 1101
+    37 00000034 66C1E806                        SHR AX, 6   ;      0000 0010 1000 1101
+    38 00000038 66C1E009                        SHL AX, 9   ;      0001 1010 0000 0000
+    39 0000003C 660905[04000000]                OR [c], AX  ;    c=0001 1011 1010 1111
+    40 00000043 A1[04000000]                    MOV EAX, [c]
+    41                                          
+    42                                          ; exit(0)
+    43 00000048 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    44 0000004A FF15[00000000]                  call    [exit]       ; call exit to terminate the program
